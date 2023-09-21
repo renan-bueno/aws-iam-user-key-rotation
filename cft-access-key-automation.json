@@ -4,16 +4,16 @@
       "IAMUserName": {
         "Description": "The IAM user name",
         "Type": "String",
-        "Default": "admin"
+        "Default": "user"
       },
       "SNSTopicName": {
         "Description": "The SNS Topic Name",
         "Type": "String",
-        "Default": "MyTopicEmailRenan"
+        "Default": "MyTopicEmail"
       }
     },
     "Resources": {
-      "LambdaExecutionRole": {
+      "AccessKeyRotationRole": {
         "Type": "AWS::IAM::Role",
         "Properties": {
           "AssumeRolePolicyDocument": {
@@ -30,13 +30,13 @@
           }
         }
       },
-      "LambdaIAMPolicy": {
+      "AccessKeyRotationPolicy": {
         "Type": "AWS::IAM::Policy",
         "Properties": {
-          "PolicyName": "LambdaIAMPolicy",
+          "PolicyName": "AccessKeyRotationPolicy",
           "Roles": [
             {
-              "Ref": "LambdaExecutionRole"
+              "Ref": "AccessKeyRotationRole"
             }
           ],
           "PolicyDocument": {
@@ -61,10 +61,10 @@
                     ]
                 }
             ]
-        }
+          }
         }
       },
-      "LambdaFunction": {
+      "AccessKeyRotationLambda": {
         "Type": "AWS::Lambda::Function",
         "Properties": {
           "Environment": {
@@ -91,13 +91,13 @@
               }
             }
           ],
-          "FunctionName": "RotateAccessKey",
+          "FunctionName": "AccessKeyRotationLambda",
           "Runtime": "python3.11",
           "Handler": "index.lambda_handler",
           "Timeout": 3,
           "Role": {
             "Fn::GetAtt": [
-              "LambdaExecutionRole",
+              "AccessKeyRotationRole",
               "Arn"
             ]
           },
@@ -107,7 +107,7 @@
           }
         }
       },
-      "EventBridgeRule": {
+      "AccessKeyRotationScheduler": {
         "Type": "AWS::Events::Rule",
         "Properties": {
           "Description": "Scheduled rule to trigger Lambda function every 80 days",
@@ -116,7 +116,7 @@
             {
               "Arn": {
                 "Fn::GetAtt": [
-                  "LambdaFunction",
+                  "AccessKeyRotationLambda",
                   "Arn"
                 ]
               },
@@ -129,13 +129,13 @@
         "Type": "AWS::Lambda::Permission",
         "Properties": {
           "FunctionName": {
-            "Ref": "LambdaFunction"
+            "Ref": "AccessKeyRotationLambda"
           },
           "Action": "lambda:InvokeFunction",
           "Principal": "events.amazonaws.com",
           "SourceArn": {
             "Fn::GetAtt": [
-              "EventBridgeRule",
+              "AccessKeyRotationScheduler",
               "Arn"
             ]
           }
@@ -143,4 +143,3 @@
       }
     }
   }
-  
