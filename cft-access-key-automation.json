@@ -1,0 +1,146 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+      "IAMUserName": {
+        "Description": "The IAM user name",
+        "Type": "String",
+        "Default": "admin"
+      },
+      "SNSTopicName": {
+        "Description": "The SNS Topic Name",
+        "Type": "String",
+        "Default": "MyTopicEmailRenan"
+      }
+    },
+    "Resources": {
+      "LambdaExecutionRole": {
+        "Type": "AWS::IAM::Role",
+        "Properties": {
+          "AssumeRolePolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": {
+                  "Service": "lambda.amazonaws.com"
+                },
+                "Action": "sts:AssumeRole"
+              }
+            ]
+          }
+        }
+      },
+      "LambdaIAMPolicy": {
+        "Type": "AWS::IAM::Policy",
+        "Properties": {
+          "PolicyName": "LambdaIAMPolicy",
+          "Roles": [
+            {
+              "Ref": "LambdaExecutionRole"
+            }
+          ],
+          "PolicyDocument": {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "IAMAndSNSPermissions",
+                    "Effect": "Allow",
+                    "Action": [
+                        "iam:ListAccessKeys",
+                        "iam:DeleteAccessKey",
+                        "iam:CreateAccessKey",
+                        "sns:Publish"
+                    ],
+                    "Resource": [
+                        {
+                          "Fn::Sub": "arn:aws:iam::*:user/${IAMUserName}"
+                        },
+                        {
+                          "Fn::Sub": "arn:aws:sns:*:*:${SNSTopicName}"
+                        }
+                    ]
+                }
+            ]
+        }
+        }
+      },
+      "LambdaFunction": {
+        "Type": "AWS::Lambda::Function",
+        "Properties": {
+          "Environment": {
+            "Variables": {
+              "IAM_USER_NAME": {
+                "Ref": "IAMUserName"
+              },
+              "SNS_TOPIC_NAME": {
+                "Ref": "SNSTopicName"
+              }
+            }
+          },
+          "Tags": [
+            {
+              "Key": "IAM_USER_NAME",
+              "Value": {
+                "Ref": "IAMUserName"
+              }
+            },
+            {
+              "Key": "SNS_TOPIC_NAME",
+              "Value": {
+                "Ref": "SNSTopicName"
+              }
+            }
+          ],
+          "FunctionName": "RotateAccessKey",
+          "Runtime": "python3.11",
+          "Handler": "index.lambda_handler",
+          "Timeout": 3,
+          "Role": {
+            "Fn::GetAtt": [
+              "LambdaExecutionRole",
+              "Arn"
+            ]
+          },
+          "Code": {
+            "S3Bucket": "my-aws-bucket-3298498",
+            "S3Key": "lambda-access-key-rotation-3.zip"
+          }
+        }
+      },
+      "EventBridgeRule": {
+        "Type": "AWS::Events::Rule",
+        "Properties": {
+          "Description": "Scheduled rule to trigger Lambda function every 80 days",
+          "ScheduleExpression": "rate(80 days)",
+          "Targets": [
+            {
+              "Arn": {
+                "Fn::GetAtt": [
+                  "LambdaFunction",
+                  "Arn"
+                ]
+              },
+              "Id": "TargetFunction"
+            }
+          ]
+        }
+      },
+      "PermissionForEventsToInvokeLambda": {
+        "Type": "AWS::Lambda::Permission",
+        "Properties": {
+          "FunctionName": {
+            "Ref": "LambdaFunction"
+          },
+          "Action": "lambda:InvokeFunction",
+          "Principal": "events.amazonaws.com",
+          "SourceArn": {
+            "Fn::GetAtt": [
+              "EventBridgeRule",
+              "Arn"
+            ]
+          }
+        }
+      }
+    }
+  }
+  
