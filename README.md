@@ -74,7 +74,3 @@ If you have only one active access key, the Lambda function will create a new ac
 ## Contributing
 
 Feel free to submit pull requests or report issues to improve the project.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
