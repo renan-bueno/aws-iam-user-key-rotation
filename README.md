@@ -9,6 +9,8 @@ This project automates the rotation of AWS IAM user access keys using AWS Lambda
 - [Parameters](#parameters)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Custom S3 Bucket](#custom-s3-bucket)
+- [Important Note](#important-note)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -57,6 +59,17 @@ The Lambda function operates under the following conditions:
 1. Update the IAM User Name and SNS Topic Name parameters in the CloudFormation template.
 2. Deploy the CloudFormation stack.
 3. The Lambda function will automatically be triggered every 80 days to manage the access keys.
+
+## Custom S3 Bucket
+
+The Python code for this Lambda function is fetched from a public S3 bucket. If you wish to use your own bucket:
+
+1. Upload the file `lambda-access-key-rotation-3.zip` to your S3 bucket and make it public.
+2. Update the `S3Bucket` and `S3Key` parameters in the CloudFormation template to point to your custom bucket and file.
+
+## Important Note
+
+If you have only one active access key, the Lambda function will create a new access key but won't delete the old one. This is to prevent breaking any applications that might be using the old key. You should manually delete the old key after updating your applications with the new key in an asynchronous manner.
 
 ## Contributing
 
