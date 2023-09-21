@@ -111,6 +111,7 @@
       "AccessKeyRotationScheduler": {
         "Type": "AWS::Events::Rule",
         "Properties": {
+          "Name": "AccessKeyRotationScheduler",
           "Description": "Scheduled rule to trigger Lambda function every 80 days",
           "ScheduleExpression": "rate(80 days)",
           "Targets": [
