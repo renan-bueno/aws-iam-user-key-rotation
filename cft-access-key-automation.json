@@ -16,6 +16,7 @@
       "AccessKeyRotationRole": {
         "Type": "AWS::IAM::Role",
         "Properties": {
+          "RoleName": "AccessKeyRotationRole",
           "AssumeRolePolicyDocument": {
             "Version": "2012-10-17",
             "Statement": [
